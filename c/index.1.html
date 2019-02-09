@@ -1,0 +1,192 @@
+<html>
+
+<head>
+    <!--sytle-->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+</head>
+
+<body>
+    <style>
+        .main_container {
+            flex-direction: row;
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .canvas_chart_contianer {
+            margin: 0 20px 0 20px;
+            flex-direction: column;
+            display: flex;
+            height: inherit;
+        }
+
+        .canvas_container {
+            margin: 0px 20px 20px 20px;
+            padding: 20px;
+            width: inherit;
+            height: 50%;
+        }
+
+        .canvas {
+            width: auto;
+            height: auto;
+        }
+
+        .params_container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: auto;
+        }
+
+        .chart_container {
+            margin: 0px 20px 0px 20px;
+            width: auto;
+        }
+
+        .chart {
+            width: inherit;
+            height: inherit;
+        }
+
+        .input {
+            margin-top: 5px;
+            margin-bottom: 5px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            width: inherit;
+            height: 50px;
+            color: #616161;
+        }
+
+        .button_container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .shadow {
+            border-radius: 8px;
+            box-shadow: 0 3px 5px rgba(26, 26, 26, 0.1);
+            box-sizing: border-box;
+        }
+
+        .label {
+            width: 250px;
+            padding: 8px;
+        }
+
+        .el-menu-vertical-demo:not(.el-menu--collapse) {
+            width: 200px;
+            min-height: 400px;
+        }
+    </style>
+    <div id="app" class="main_container">
+        <div class="canvas_chart_contianer" style="flex: 5;">
+            <div class="canvas_container shadow">
+                <canvas id="canvas" class="canvas"></canvas>
+            </div>
+            <div class="chart_container shadow">
+                <el-menu default-active="1-4-1" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose"
+                    :collapse="true">
+                    <el-menu-item index="1">
+                        <i class="el-icon-menu"></i>
+                        <span slot="title">导航1</span>
+                    </el-menu-item>
+                    <el-menu-item index="2">
+                        <i class="el-icon-menu"></i>
+                        <span slot="title">导航2</span>
+                    </el-menu-item>
+                    <el-menu-item index="3" disabled>
+                        <i class="el-icon-document"></i>
+                        <span slot="title">导航3</span>
+                    </el-menu-item>
+                    <el-menu-item index="4">
+                        <i class="el-icon-setting"></i>
+                        <span slot="title">导航4</span>
+                    </el-menu-item>
+                </el-menu>
+            </div>
+        </div>
+        <div class="params_container shadow" style="flex: 2;">
+            <h1>Params</h1>
+            <div class="input">
+                <label class="label">Mass(Kg)</label>
+                <el-input placeholder="1.0"></el-input>
+            </div>
+            <div class="input">
+                <label class="label">Length(m)</label>
+                <el-input placeholder="1.0"></el-input>
+            </div>
+            <div class="input">
+                <label class="label">Drag Coefiicient</label>
+                <el-input placeholder="0.1"></el-input>
+            </div>
+            <div class="input">
+                <label class="label">Time Step(s)</label>
+                <el-input placeholder="0.02"></el-input>
+            </div>
+            <div class="input">
+                <label class="label">Initial Angle(°)</label>
+                <el-input placeholder="30"></el-input>
+            </div>
+            <div class="input">
+                <label class="label">Total Time(s)</label>
+                <el-input placeholder="10"></el-input>
+            </div>
+            <div class="button_container">
+                <el-button type="primary" style="padding:10px; height:100px; width:100px;" circle>Go!</el-button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/v-charts/lib/index.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                isCollapse: true,
+                chartData: {}
+            },
+            created: function () {
+                that = this;
+                axios.get('http://127.0.0.1:9000/data')
+                    .then(response => {
+                        res = response.data.data
+                        that.chartData = {
+                            columns: ["x", "y"],
+                            rows: res.angle
+                        }
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
+            },
+            mounted: function () {
+                var c = document.getElementById("canvas");
+                var ctx = c.getContext("2d");
+                ctx.beginPath();
+                ctx.arc(95, 50, 40, 0, 2 * Math.PI);
+                ctx.stroke();
+            },
+            updated: function () {
+
+            },
+            methods: {
+            },
+        })
+    </script>
+</body>
+
+</html>

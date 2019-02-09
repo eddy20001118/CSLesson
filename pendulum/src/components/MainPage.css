@@ -1,0 +1,107 @@
+.el-main {
+    min-height: 500px;
+    width: 100%;
+    background-color: #f2f2f2;
+  }
+  
+  .el-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: #447eff;
+    font-size: 30px;
+    font-weight: bold;
+    color: #ffffff;
+  }
+  
+  .el-row {
+    margin-bottom: 20px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  .el-col {
+    border-radius: 4px;
+  }
+  
+  .canvas-container {
+    padding: 30px;
+    height: 500px;
+    background-color: #d3dce6;
+    border-radius: 4px;
+  }
+  
+  .params-container {
+    padding: 30px;
+    height: 500px;
+    background-color: #ffffff;
+    border-radius: 4px;
+  }
+  
+  .chart-container {
+    height: 400px;
+    background-color: #ffffff;
+    border-radius: 4px;
+  }
+  
+  .grid-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    min-height: 100px;
+  }
+  
+  .grid-title {
+    font-size: 15px;
+    color: #ffffff;
+  }
+  
+  .grid-data {
+    font-size: 36px;
+    font-weight: bold;
+    color: #ffffff;
+  }
+  
+  .label {
+    font-size: 14px;
+    text-align: right;
+    padding-right: 12px;
+  }
+  
+  .button {
+    height: 60px;
+    width: 60px;
+    border-radius: 50%;
+    border: solid 1px #ebebeb;
+    transition: 0.2s;
+    padding: 15px;
+    background-color: #ffffff;
+  }
+  
+  .button:hover {
+    height: 60px;
+    width: 60px;
+    border-radius: 50%;
+    border: solid 1px #ebebeb;
+    transition: 0.2s;
+    padding: 15px;
+    cursor: pointer;
+  }
+  
+  .button:active {
+    height: 60px;
+    width: 60px;
+    border-radius: 50%;
+    border: solid 1px #ebebeb;
+    transition: 0.2s;
+    padding: 15px;
+    cursor: pointer;
+    background-color: #eeeeee;
+  }
+  
+  .shadow {
+    box-shadow: 0 3px 5px rgba(26, 26, 26, 0.1);
+    box-sizing: border-box;
+  }
