@@ -30,10 +30,53 @@ class PendulumSim():
         'time': 0.0,
     }
 
+    sim_vars_rt = {
+        'tg': 0.0,
+        'drag_force': 0.0,
+        'accel': 0.0,
+        'vel': 0.0,
+        'dis': 0.0,
+        'ang': 0.0,
+        'time': 0.0,
+    }
+
     angle = []
     vel = []
     accel = []
     dis = []
+
+    def reset_vars(self, type):
+        if type == 'rt':
+            self.sim_vars_rt = {
+                'tg': 0.0,
+                'drag_force': 0.0,
+                'accel': 0.0,
+                'vel': 0.0,
+                'dis': 0.0,
+                'ang': 0.0,
+                'time': 0.0,
+            }
+            return True
+        elif type == 'pc':
+            self.sim_vars = {
+                'tg': 0.0,
+                'drag_force': 0.0,
+                'accel': 0.0,
+                'vel': 0.0,
+                'dis': 0.0,
+                'ang': 0.0,
+                'time': 0.0,
+            }
+            self.angle = []
+            self.vel = []
+            self.accel = []
+            self.dis = []
+            return True
+        else:
+            return False
+
+    def set_params(self, params):
+        self.sim_params = params
 
     def sim_cal(self):
         """
@@ -58,28 +101,31 @@ class PendulumSim():
             self.sim_vars['dis'] / self.sim_params['length']) + self.sim_params['init_angle']
         self.sim_vars['time'] += self.sim_params['time_step']
         self.angle.append({
-            'x': ("%.2f" % self.sim_vars['time']),
-            'y': self.sim_vars['ang'] * self.sim_const['rad_deg_ratio']
+            'time': ("%.2f" % self.sim_vars['time']),
+            'Angle': self.sim_vars['ang'] * self.sim_const['rad_deg_ratio']
         })
         self.vel.append({
-            'x': ("%.2f" % self.sim_vars['time']),
-            'y': self.sim_vars['vel']
+            'time': ("%.2f" % self.sim_vars['time']),
+            'Velocity': self.sim_vars['vel']
         })
         self.accel.append({
-            'x': ("%.2f" % self.sim_vars['time']),
-            'y': self.sim_vars['accel']
+            'time': ("%.2f" % self.sim_vars['time']),
+            'Acceleration': self.sim_vars['accel']
         })
         self.dis.append({
-            'x': ("%.2f" % self.sim_vars['time']),
-            'y': self.sim_vars['dis']
+            'time': ("%.2f" % self.sim_vars['time']),
+            'Distance': self.sim_vars['dis']
         })
 
     def run(self):
         time_range = np.arange(
             0, self.sim_params['total_time'], self.sim_params['time_step'])
+
         for i in time_range:
             self.sim_cal()
+
         res = {
+            'time_range': list(time_range),
             'angle': self.angle,
             'vel': self.vel,
             'accel': self.accel,
@@ -87,4 +133,45 @@ class PendulumSim():
         }
         return res
 
+    def run_rt(self, index):
+        time = index * self.sim_params['time_step']
+        self.sim_vars_rt['time'] = time
+        if self.sim_vars_rt['time'] == 0:
+            self.sim_vars_rt['ang'] = self.sim_params['init_angle']
 
+        self.sim_vars_rt['tg'] = -1*self.sim_const['g'] * \
+            self.sim_params['mass']*math.sin(self.sim_vars_rt['ang'])
+        self.sim_vars_rt['drag_force'] = self.sim_vars_rt['vel'] * \
+            math.fabs(self.sim_vars_rt['vel'])*self.sim_params['drag_coef']
+        self.sim_vars_rt['accel'] = (
+            self.sim_vars_rt['tg']-self.sim_vars_rt['drag_force'])/self.sim_params['mass']
+
+        self.sim_vars_rt['vel'] += self.sim_params['time_step'] * \
+            self.sim_vars_rt['accel']
+        self.sim_vars_rt['dis'] += self.sim_params['time_step'] * \
+            self.sim_vars_rt['vel']
+        self.sim_vars_rt['ang'] = (
+            self.sim_vars_rt['dis'] / self.sim_params['length']) + self.sim_params['init_angle']
+
+        return self.sim_vars_rt
+
+
+def main():
+    sim = PendulumSim()
+    my_params = {
+        'mass': 2.0,
+        'length': 2.0,
+        'drag_coef': 0.2,
+        'time_step': 0.02,
+        'init_angle': math.pi/3,
+        'total_time': 5
+    }
+    sim.set_params(my_params)
+    f = file.open('data.csv')
+    sim.reset_vars('rt')
+    for i in range(0, 10):
+        print(sim.run_rt(i))
+
+
+if __name__ == "__main__":
+    main()

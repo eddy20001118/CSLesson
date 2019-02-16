@@ -6,7 +6,7 @@
         <el-row :gutter="20">
           <el-col :span="6">
             <div class="grid-content" style="background-color: rgb(88,202,154)">
-              <div class="grid-data">100</div>
+              <div class="grid-data">{{block.ang}}</div>
               <div class="grid-title">Angle</div>
             </div>
           </el-col>
@@ -32,7 +32,7 @@
         <el-row :gutter="20">
           <el-col :span="16">
             <div id="canvasContainer" class="canvas-container">
-              <canvas id="canvas" :width="400" :height="300"/>
+              <!-- <canvas id="canvas" :width="400" :height="300"/> -->
             </div>
           </el-col>
           <el-col :span="8">
@@ -76,8 +76,8 @@
                   <el-input-number
                     style="width: 100%;"
                     controls-position="right"
-                    v-model="params.dg"
-                    :min="0.1"
+                    v-model="params.drag_coef"
+                    :min="0"
                     :step="0.1"
                   ></el-input-number>
                 </el-col>
@@ -93,7 +93,7 @@
                   <el-input-number
                     style="width: 100%;"
                     controls-position="right"
-                    v-model="params.initAngle"
+                    v-model="params.init_angle"
                     :min="-90"
                     :max="90"
                     :step="1"
@@ -108,7 +108,7 @@
                   <el-input-number
                     style="width: 100%;"
                     controls-position="right"
-                    v-model="params.timeStep"
+                    v-model="params.time_step"
                     :min="0.02"
                     :max="1"
                     :step="0.02"
@@ -123,7 +123,7 @@
                   <el-input-number
                     style="width: 100%;"
                     controls-position="right"
-                    v-model="params.totalTime"
+                    v-model="params.total_time"
                     :min="0"
                     :step="0.5"
                   ></el-input-number>
@@ -143,7 +143,7 @@
               </el-row>
               <el-row style="height: 80px; margin-bottom: 0px;" type="flex" align="middle">
                 <el-col :span="12">
-                  <img class="button shadow" src="../res/play.png">
+                  <img v-on:click="onStartClick" class="button shadow" src="../res/play.png">
                 </el-col>
                 <el-col :span="12">
                   <img class="button shadow" src="../res/refresh.png">
@@ -161,11 +161,17 @@
                 style="height: 360px; padding: 20px 0 20px 0;"
               >
                 <el-tab-pane label="Angle" name="ang">
-                  <ve-line :data="chartData" judge-width :colors="['#447eff']"></ve-line>
+                  <ve-line :data="chartData.ang" judge-width :colors="['#58CA9A']"></ve-line>
                 </el-tab-pane>
-                <el-tab-pane label="Distance" name="dis">配置管理</el-tab-pane>
-                <el-tab-pane label="Velocity" name="vel">角色管理</el-tab-pane>
-                <el-tab-pane label="Acceration" name="acc">定时任务补偿</el-tab-pane>
+                <el-tab-pane label="Distance" name="dis">
+                  <ve-line :data="chartData.dis" judge-width :colors="['#EE706D']"></ve-line>
+                </el-tab-pane>
+                <el-tab-pane label="Velocity" name="vel">
+                  <ve-line :data="chartData.vel" judge-width :colors="['#F7DA47']"></ve-line>
+                </el-tab-pane>
+                <el-tab-pane label="Acceration" name="acc">
+                  <ve-line :data="chartData.acc" judge-width :colors="['#447eff']"></ve-line>
+                </el-tab-pane>
               </el-tabs>
             </div>
           </el-col>
@@ -181,68 +187,93 @@ export default {
   name: "MainPage",
   data() {
     return {
+      block: {
+        ang: 0
+      },
+      timer: {
+        pc: {},
+        rt: {}
+      },
+      sys_const: {
+        g: 9.81,
+        rad_deg_ratio: 57.29577951,
+        deg_rad_ratio: 0.01745329
+      },
       params: {
         mass: 1,
         length: 1,
-        dg: 0.1,
-        initAngle: 30,
-        timeStep: 0.02,
-        totalTime: 10,
+        drag_coef: 0.1,
+        init_angle: 30,
+        time_step: 0.02,
+        total_time: 10,
         realTime: false
       },
       tabs: {
         active: "ang"
       },
-      chartData: {}
+      chartData: {
+        ang: {},
+        dis: {},
+        vel: {},
+        acc: {}
+      }
     };
   },
-  created() {
-    var that = this;
-    axios
-      .get("http://127.0.0.1:9000/data")
-      .then(response => {
-        var res = response.data.data;
-        that.chartData = {
-          columns: ["x", "y"],
-          rows: res.angle
-        };
-      })
-      .catch(error => {
-        console.log(error);
-      });
+  methods: {
+    onStartClick: function() {
+      var that = this;
+      axios
+        .post("http://127.0.0.1:5000/api/res/pc", {
+          mass: this.params.mass,
+          length: this.params.length,
+          drag_coef: this.params.drag_coef,
+          init_angle: this.params.init_angle * this.sys_const.deg_rad_ratio,
+          time_step: this.params.time_step,
+          total_time: this.params.total_time
+        })
+        .then(response => {
+          var res = response.data.data.res;
+          that.chartData = {
+            ang: {
+              columns: ["time", "Angle"],
+              rows: res.angle
+            },
+            dis: {
+              columns: ["time", "Distance"],
+              rows: res.dis
+            },
+            vel: {
+              columns: ["time", "Velocity"],
+              rows: res.vel
+            },
+            acc: {
+              columns: ["time", "Acceleration"],
+              rows: res.accel
+            }
+          };
+          show(res);
+        })
+        .catch(error => {
+          console.log(error);
+        });
+
+      function show(res) {
+        var index = 0;
+        var angleArray = res.angle;
+        let a = setInterval(() => {
+          if (index < angleArray.length) {
+            console.log(angleArray[index].Angle);
+            index++;
+          } else {
+            clearInterval(a);
+          }
+        }, that.params.time_step * 1000);
+      }
+    }
   },
+  created() {},
   mounted() {},
   updated() {
-    var canvasContainer = document.getElementById("canvasContainer");
-    var height = canvasContainer.clientHeight - 60;
-    var width = canvasContainer.clientWidth - 60;
-    var canvas = document.getElementById("canvas");
-    canvas.setAttribute("height", height);
-    canvas.setAttribute("width", width);
-    var ctx = canvas.getContext("2d");
-    var lineLength = this.params.length * 100;
-    var startX = width / 2;
-    var radius = this.params.mass * 15;
-
-    //line
-    ctx.beginPath();
-    ctx.lineWidth = 2;
-    ctx.moveTo(startX, 0);
-    ctx.lineTo(startX, lineLength);
-    ctx.closePath();
-    ctx.strokeStyle = "#a29376";
-    ctx.stroke();
-
-    //circle 01
-    ctx.beginPath();
-    ctx.arc(startX, lineLength + radius, radius, 0, Math.PI);
-    ctx.fillStyle = "#828386";
-    ctx.fill();
-    //circle 02
-    ctx.beginPath();
-    ctx.arc(startX, lineLength + radius, radius, Math.PI, 0);
-    ctx.fillStyle = "#939598";
-    ctx.fill();
   }
 };
 </script>
@@ -354,5 +385,4 @@ export default {
   box-shadow: 0 3px 5px rgba(26, 26, 26, 0.1);
   box-sizing: border-box;
 }
-
 </style>
